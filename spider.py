@@ -29,8 +29,12 @@ import warnings
 
 #工具函数：用于请求页面并返回页面数据
 def get_web_data(url):
+    service_args = []
+    service_args.append('--load-images=no')  ##关闭图片加载
+    service_args.append('--disk-cache=yes')  ##开启缓存
+    service_args.append('--ignore-ssl-errors=true')  ##忽略https错误
     warnings.filterwarnings('ignore')
-    browser = webdriver.PhantomJS()
+    browser = webdriver.PhantomJS(service_args=service_args)
     web_data = None
     try:
         browser.get(url)
@@ -84,29 +88,49 @@ def get_court_subclass_years(subclass_data):
     year_url_list = []
     year_data = []
     for year in years:
+
         if 'href' in str(year):
             #print(court.text, court.get('href'))
             year_list.append(year.text)
             year_url_list.append(year.get('href'))
-            if 'Pre' in year.text:
-                web_data1 = get_web_data(year.get('href'))
-                soup1 = BeautifulSoup(web_data1, 'lxml')
-                years1 = soup1.select('#JSCookTreeFolderClosed .ThemeXPFolderText a')
-                year_list1 = []
-                year_url_list1 = []
-                year_data = []
-                for year1 in years1:
-                    if 'href' in str(year1):
-                        year_list1.append(year1.text)
-                        year_url_list1.append(year1.get('href'))
-                        year_data.append([subclass_data[0], subclass_data[1], year1.text, year1.get('href')])
-                        #print(year_data1)
-            else:
-                year_data.append([subclass_data[0],subclass_data[1],year.text,year.get('href')])
+            # if 'Pre' in year.text:
+            #     web_data1 = get_web_data(year.get('href'))
+            #     soup1 = BeautifulSoup(web_data1, 'lxml')
+            #     years1 = soup1.select('#JSCookTreeFolderClosed .ThemeXPFolderText a')
+            #     year_list1 = []
+            #     year_url_list1 = []
+            #     year_data1 = []
+            #     for year1 in years1:
+            #         if 'href' in str(year1):
+            #             year_list1.append(year1.text)
+            #             year_url_list1.append(year1.get('href'))
+            #             year_data1.append([subclass_data[0], subclass_data[1], year1.text, year1.get('href')])
+            #             #print(year_data1)
+            #     return year_data1
+            # else:
+            year_data.append([subclass_data[0], subclass_data[1], year.text, year.get('href')])
+    #print("@@@@@@@@@@",year_data)
+    if 'Pre' in str(year_data[-1][2]):
+        web_data1 = get_web_data(year_data[-1][3])
+        soup1 = BeautifulSoup(web_data1, 'lxml')
+        years1 = soup1.select('.ThemeXPTreeLevel1 .ThemeXPTreeLevel1 #JSCookTreeFolderClosed .ThemeXPFolderText a')
+        year_list1 = []
+        year_url_list1 = []
+        year_data1 = []
+        for year1 in years1:
+            if 'href' in str(year1):
+                year_list1.append(year1.text)
+                year_url_list1.append(year1.get('href'))
+                year_data1.append([subclass_data[0], subclass_data[1], year1.text, year1.get('href')])
+        return year_data1
+    else:
+        return year_data
+
                 #print(year_data)
     #print(year_list)
     #print(year_url_list)
-    print(year_data)
+    #print(year_data)
+    #return year_data
     # for i in year_data:
     #     if i[]
 
@@ -122,4 +146,7 @@ court_data = get_court_data(web_data)
 for data in court_data:
     subclass_data = get_court_subclass(data)
     for data1 in subclass_data:
-        get_court_subclass_years(data1)
+        data2 = get_court_subclass_years(data1)
+        print(data2)
+        # for each in data2:
+        #     print('########',each[3])
